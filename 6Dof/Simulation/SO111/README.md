@@ -1,23 +1,21 @@
-# SO111 (6-DoF SO101) - URDF and MuJoCo Description
+# SO111（6軸版 SO101）- URDF / MuJoCo 記述
 
-`SO111` is the SO101 arm with one extra axis: a forearm roll (`forearm_roll`) between
-`elbow_flex` and `wrist_flex`. Two new printed parts carry it: `so111_j3_j4_v1` (replaces the
-SO101 under-arm and holds the J4 motor) and `so111_j4_j5_v1` (cup on the J4 horn that holds the
-J5 motor). Everything from the base to the upper arm and from the wrist to the gripper is the
-stock SO101 hardware.
+`SO111` は SO101 アームに 1 軸を追加した構成で、`elbow_flex` と `wrist_flex` の間に前腕ロール
+（`forearm_roll`）が入ります。新規の 3D プリント部品は 2 つ: `so111_j3_j4_v1`（SO101 の
+under-arm を置き換え、J4 モータを保持）と `so111_j4_j5_v1`（J4 ホーンに付くカップで、J5 モータを保持）。
+ベースから上腕まで、および手首からグリッパまでは SO101 の既存部品そのままです。
 
-## Files
+## ファイル
 
-- `so111_new_calib.urdf` / `so111_new_calib.xml` - URDF and MJCF, meshes referenced relatively from `assets/`.
-- `scene.xml` - MuJoCo scene (floor, light) including the MJCF.
-- `joints_properties.xml` - STS3215 joint defaults (copied from `Simulation/SO101`).
-- `assets/` - STL meshes in metres. Stock parts are copied from `Simulation/SO101/assets`;
-  `so111_*.stl` are exported from the Fusion part designs.
+- `so111_new_calib.urdf` / `so111_new_calib.xml` - URDF と MJCF。メッシュは `assets/` からの相対パスで参照。
+- `scene.xml` - MJCF を include した MuJoCo シーン（床・照明）。
+- `joints_properties.xml` - STS3215 のジョイント既定値（`Simulation/SO101` からコピー）。
+- `assets/` - m 単位の STL。既存部品は `Simulation/SO101/assets` からコピー、`so111_*.stl` は Fusion の部品設計から書き出し。
 
-## Kinematic chain
+## 関節構成
 
-| # | joint | parent -> child | range (rad) |
-|---|-------|-----------------|-------------|
+| # | joint | parent -> child | 可動域 (rad) |
+|---|-------|-----------------|--------------|
 | 1 | shoulder_pan | base_link -> shoulder_link | -1.92 .. 1.92 |
 | 2 | shoulder_lift | shoulder_link -> upper_arm_link | -1.745 .. 1.745 |
 | 3 | elbow_flex | upper_arm_link -> lower_arm_link | -1.69 .. 1.69 |
@@ -26,23 +24,23 @@ stock SO101 hardware.
 | 6 | wrist_roll | wrist_link -> gripper_link | -2.744 .. 2.841 |
 | 7 | gripper | gripper_link -> moving_jaw_so101_v1_link | -0.175 .. 1.745 |
 
-Every joint rotates about +Z of its child link frame; `gripper_frame_link` (URDF) and the
-`gripperframe` site (MJCF) mark the tool frame as in SO101.
+各関節は子リンク座標系の +Z 軸まわりに回転します。ツール座標系は SO101 と同様に
+`gripper_frame_link`（URDF）/ `gripperframe` サイト（MJCF）で示しています。
 
-Zero pose: identical to `so101_new_calib` for the stock joints (middle of range, upper arm
-vertical, forearm horizontal); `forearm_roll = 0` is the forearm as assembled (cup upright).
+ゼロ姿勢: 既存の関節は `so101_new_calib` と同一（可動域中央。上腕が垂直、前腕が水平）。
+`forearm_roll = 0` は組み立て時の前腕まっすぐの姿勢（カップが正立）です。
 
-## How it was generated
+## 生成手順
 
-1. `6Dof/tools/gen_spec.py` turns `Simulation/SO101/so101_new_calib.urdf` into a Fusion build
-   spec; `fusion_build_assembly.py` builds the SO101 link assembly in Fusion (one component per
-   link, as-built revolute joints named like the URDF joints).
-2. The two new parts and their motors were placed in that assembly (Fusion document
-   `SO111-Assembly`) and joined with `elbow_flex`, `forearm_roll`, `wrist_flex`.
-3. `gen_so111_description.py` reads the link/joint transforms exported from Fusion
-   (`tools/build/so111_fusion_dump.json`) and writes the URDF/MJCF. Unchanged links reuse the
-   SO101 inertials and meshes. `lower_arm_link` and `forearm_link` inertials are computed from
-   the meshes with an effective printed-part density of 497 kg/m^3 and a lumped STS3215 mass of
-   57.7 g, both regressed from the SO101 URDF link masses (fit residual within +/-13 g).
-4. `validate_so111.py` loads both files (yourdfpy, MuJoCo), compares the forward kinematics
-   with the Fusion assembly and runs a short simulation.
+1. `6Dof/tools/gen_spec.py` が `Simulation/SO101/so101_new_calib.urdf` から Fusion 用の組立仕様を作り、
+   `fusion_build_assembly.py` が Fusion 上に SO101 のリンクアセンブリを構築します
+   （1 リンク = 1 コンポーネント、URDF の関節名と同名の as-built 回転ジョイント）。
+2. そのアセンブリ（Fusion ドキュメント `SO111-Assembly`）に新規 2 部品とモータを配置し、
+   `elbow_flex` / `forearm_roll` / `wrist_flex` で結合しました。
+3. `gen_so111_description.py` が Fusion から抽出したリンク／ジョイントの座標系
+   （`tools/build/so111_fusion_dump.json`）を読み、URDF / MJCF を書き出します。変更のないリンクは
+   SO101 の慣性とメッシュを流用。`lower_arm_link` と `forearm_link` の慣性はメッシュから計算しており、
+   3D プリント部品の実効密度 497 kg/m^3 と STS3215 の集中質量 57.7 g を用いています
+   （いずれも SO101 URDF のリンク質量からの回帰値。当てはめ残差は ±13 g 以内）。
+4. `validate_so111.py` が両ファイルを読み込み（yourdfpy、MuJoCo）、Fusion アセンブリと順運動学を照合し、
+   短いシミュレーションを実行します。
