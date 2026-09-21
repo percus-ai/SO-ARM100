@@ -5,6 +5,10 @@
 under-arm を置き換え、J4 モータを保持）と `so111_j4_j5_v1`（J4 ホーンに付くカップで、J5 モータを保持）。
 ベースから上腕まで、および手首からグリッパまでは SO101 の既存部品そのままです。
 
+![SO111 を MuJoCo で描画](media/so111_mujoco.png)
+
+`scene.xml` を MuJoCo で描画したもの。左: ゼロ姿勢、右: `forearm_roll` を含む全関節を動かした姿勢。
+
 ## ファイル
 
 - `so111_new_calib.urdf` / `so111_new_calib.xml` - URDF と MJCF。メッシュは `assets/` からの相対パスで参照。
